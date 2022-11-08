@@ -17,9 +17,9 @@ const App: Component = () => {
     [isGameOver, setIsGameOver] = createSignal(false),
     [obstacles, setObstacles] = createSignal<Obstacle[]>([]),
     [score, setScore] = createSignal(0),
+    [jumpHeight, setJumpHeight] = createSignal(0),
     updateScale = () => setScale(Math.min(window.innerHeight / 1920, window.innerWidth / 1080)),
     gameLoop = () => {
-      console.log(obstacles());
       if (obstacles().some(({ lane, distance }) => distance < 0 && lane === currentLane())) {
         setIsGameOver(true);
         animationFrame = null;
@@ -33,13 +33,29 @@ const App: Component = () => {
       ]);
       setTrackOffset(t => (t + speed * 2.5) % 1080);
       setScore(s => s + speed);
+      if (verticalAcceleration >= -15)
+        setJumpHeight(height => Math.max(height + verticalAcceleration--, 0));
       animationFrame = requestAnimationFrame(gameLoop);
     },
     onKeyDown = (e: KeyboardEvent) => {
-      if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-      setCurrentLane(Math.min(Math.max(currentLane() + (e.key === 'ArrowRight' ? 1 : -1), 0), 2));
+      if (isGameOver() || !isGameStarted()) return;
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'ArrowRight':
+          setCurrentLane(
+            Math.min(Math.max(currentLane() + (e.key === 'ArrowRight' ? 1 : -1), 0), 2)
+          );
+          break;
+        case ' ':
+        case 'ArrowUp':
+          if (jumpHeight() <= 0) verticalAcceleration = 15;
+          break;
+        default:
+          console.log(`There are no handler for key "${e.key}"`);
+      }
     },
     startGame = () => {
+      setCurrentLane(1);
       setScore(0);
       setIsGameStarted(true);
       setIsGameOver(false);
@@ -47,7 +63,8 @@ const App: Component = () => {
     };
 
   let animationFrame: number | null = null,
-    speed = 1;
+    speed = 1,
+    verticalAcceleration = 0;
 
   window.addEventListener('resize', updateScale);
   window.addEventListener('keydown', onKeyDown);
@@ -63,7 +80,9 @@ const App: Component = () => {
       class={styles.main}
       style={`transform: translate(-50%, -50%) scale(${scale()}); --lane: ${currentLane()};`}
     >
-      <p class={styles.score}>Score: {Math.floor(score() / 10)}</p>
+      <p class={styles.score}>
+        Score: {Math.floor(score() / 10)} {jumpHeight()}
+      </p>
       {!isGameStarted() && (
         <button class={styles.startBtn} onClick={startGame}>
           START GAME
@@ -86,10 +105,13 @@ const App: Component = () => {
               [900, 140, -630],
               [1650, 890, 120]
             ][lane][currentLane()]
-          };`}
+          }; --jumpOffset: ${jumpHeight()};`}
         ></img>
       ))}
-      <div class={styles.track} style={`--offset: ${trackOffset()}`}></div>
+      <div
+        class={styles.track}
+        style={`--offset: ${trackOffset()}; --jumpOffset: ${jumpHeight()};`}
+      ></div>
     </main>
   );
 };
