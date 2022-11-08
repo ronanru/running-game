@@ -17,7 +17,7 @@
   width: 100%;
   height: 5000px;
   transform: translateX(calc(var(--lane) * -33.33% + 33.33%)) rotateX(90deg)
-    translateY(calc(var(--offset) * 1px)) translateZ(calc(var(--jumpOffset) * -2px));
+    translateY(calc(var(--offset) * 1px)) translateZ(calc(var(--jumpOffset) * -0.5px));
   display: flex;
   transform-origin: 50% 90%;
   z-index: -10;
@@ -30,7 +30,7 @@
   aspect-ratio: 1 / 1;
   width: 800px;
   transform: translateX(calc(var(--laneOffset) * 1px)) translateZ(calc(var(--distance) * -5px))
-    translateY(calc(var(--jumpOffset) * 4px));
+    translateY(calc(var(--jumpOffset) * 1px));
   bottom: 0;
 }
 .startBtn {
